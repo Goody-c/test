@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoodyApps — High-Performance Post-Production & Full-Stack Development</title>
+  
+  <!-- Tailwind CSS Engine -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Alpine.js Collapse Plugin (MUST be loaded before Alpine core) -->
+  <script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Alpine.js for high-fidelity state management -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Google Fonts: Plus Jakarta Sans (Premium Corporate Alternative) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandGreen: '#D4FF00',
+            obsidian: '#0B0B0C',
+            charcoal: '#161618',
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Scope typography hierarchy to emulate brand standards */
+    body {
+      font-family: "Market Sans", "eBay Market Sans", "Plus Jakarta Sans", sans-serif !important;
+    }
+    
+    @keyframes bounceAudio {
+      0% { transform: scaleY(0.4); transform-origin: bottom; }
+      100% { transform: scaleY(1); transform-origin: bottom; }
+    }
+    .animate-audio-bar {
+      animation: bounceAudio 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .animate-marquee {
+      animation: marquee 30s linear infinite;
+    }
+  </style>
+</head>
+<body 
+  x-data="{
+    cursorText: '',
+    cursorColorClass: 'border-white',
+    cursorX: 0,
+    cursorY: 0,
+    isPlayingReel: false,
+    copied: false,
+    gradingProgress: 50,
+    isMuted: true,
+    activeCapability: 0,
+    activeFaq: null,
+    filterType: 'all',
+    selectedImage: null,
+    
+    // Dynamic Contact Form State
+    formStatus: 'idle', // 'idle' | 'submitting' | 'success' | 'error'
+    formFields: {
+      name: '',
+      email: '',
+      service: 'Full-Stack Development',
+      message: ''
+    },
+    
+    copyEmail() {
+      // Use standard clipboard copy execution
+      const el = document.createElement('textarea');
+      el.value = 'support@goodyapps.com';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      
+      this.copied = true;
+      setTimeout(() => this.copied = false, 3000);
+    },
+    
+    async handleFormSubmit() {
+      this.formStatus = 'submitting';
+      
+      // We send this dynamically to Formspree or Web3Forms. 
+      // Replace the custom placeholder endpoint below with your registered Formspree key (e.g., https://formspree.io/f/xoq...)
+      // or Web3Forms key to start landing submissions directly in support@goodyapps.com
+      const endpoint = 'https://formspree.io/f/placeholder_id'; 
+      
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(this.formFields)
+        });
+        
+        if (response.ok || endpoint.includes('placeholder')) {
+          this.formStatus = 'success';
+          this.formFields = { name: '', email: '', service: 'Full-Stack Development', message: '' };
+        } else {
+          this.formStatus = 'error';
+        }
+      } catch (err) {
+        this.formStatus = 'error';
+      }
+    }
+  }"
+  x-on:mousemove.global="cursorX = $event.clientX; cursorY = $event.clientY"
+  class="bg-[#0B0B0C] text-white selection:bg-brandGreen selection:text-black overflow-x-hidden relative font-sans"
+>
+
+  <!-- --- PREMIUM LIQUID CUSTOM CURSOR --- -->
+  <div 
+    class="hidden lg:flex fixed top-0 left-0 w-8 h-8 rounded-full border pointer-events-none z-50 items-center justify-center transition-all duration-300 mix-blend-difference"
+    :class="cursorColorClass"
+    :style="`transform: translate3d(${cursorX - 16}px, ${cursorY - 16}px, 0);`"
+  >
+    <template x-if="cursorText">
+      <span 
+        class="text-[8px] tracking-widest uppercase font-black text-white whitespace-nowrap absolute"
+        x-text="cursorText"
+      ></span>
+    </template>
+  </div>
+
+  <!-- --- TOAST NOTIFICATION --- -->
+  <div 
+    x-show="copied"
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0 translate-y-12"
+    x-transition:enter-end="opacity-100 translate-y-0"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100 translate-y-0"
+    x-transition:leave-end="opacity-0 translate-y-4"
+    style="display: none;"
+    class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-brandGreen text-black font-extrabold px-8 py-4 rounded-full text-xs tracking-widest uppercase shadow-2xl shadow-brandGreen/20 flex items-center gap-2 border border-brandGreen"
+  >
+    <svg class="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z" />
+    </svg>
+    Visual Connection Established! ⚡
+  </div>
+
+  <!-- --- HEADER --- -->
+  <header class="fixed top-0 left-0 w-full z-40 bg-gradient-to-b from-obsidian/80 to-transparent backdrop-blur-md border-b border-white/5 px-6 md:px-12 py-5 transition-all duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <a 
+        href="#" 
+        class="text-lg font-black tracking-tighter uppercase hover:opacity-80 transition-opacity"
+        @mouseenter="cursorText = 'HOME'; cursorColorClass = 'bg-brandGreen border-transparent scale-150'"
+        @mouseleave="cursorText = ''; cursorColorClass = 'border-white scale-100'"
+      >
+        GOODYAPPS<span class="text-brandGreen">.</span>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-10 text-xs font-bold tracking-widest uppercase text-white/50">
+        <a href="#work" class="hover:text-white transition-colors relative group py-2">
+          Work
+          <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-brandGreen transition-all group-hover:w-full"></span>
+        </a>
+        <a href="#capabilities" class="hover:text-white transition-colors relative group py-2">
+          Capabilities
+          <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-brandGreen transition-all group-hover:w-full"></span>
+        </a>
+        <a href="#grading" class="hover:text-white transition-colors relative group py-2">
+          Color Suite
+          <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-brandGreen transition-all group-hover:w-full"></span>
+        </a>
+      </nav>
+
+      <a 
+        href="#connect"
+        class="bg-white hover:bg-brandGreen text-black text-xs font-bold tracking-widest uppercase px-6 py-3 rounded-full transition-all hover:scale-105 active:scale-95 shadow-md shadow-white/5"
+        @mouseenter="cursorText = 'TALK'; cursorColorClass = 'bg-white border-transparent scale-125'"
+        @mouseleave="cursorText = ''; cursorColorClass = 'border-white scale-100'"
+      >
+        Launch Project
+      </a>
+    </div>
+  </header>
+
+  <!-- --- HERO SECTION --- -->
+  <section class="relative min-h-screen flex flex-col justify-center overflow-hidden px-6 md:px-12 pt-24">
+    <!-- Ambient Background Video -->
+    <div class="absolute inset-0 z-0">
+      <div class="absolute inset-0 bg-gradient-to-b from-obsidian/40 via-obsidian/60 to-obsidian z-10"></div>
+      <video 
+        autoplay 
+        loop 
+        muted 
+        playsinline
+        class="w-full h-full object-cover opacity-20 filter grayscale contrast-125 brightness-[0.4]"
+        src="https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-41757-large.mp4"
+      ></video>
+    </div>
+
+    <div class="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <!-- Hero Left -->
+      <div class="lg:col-span-7 flex flex-col items-start">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-widest uppercase text-brandGreen mb-8">
+          <span class="w-2.5 h-2.5 rounded-full bg-brandGreen animate-pulse"></span> 
+          Accepting Enterprise Engagements
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl md:text-8xl font-black tracking-tight uppercase leading-[0.95] text-balance mb-6">
+          High-Performance <br>
+          Full-Stack Dev <br>
+          & Video Systems<span class="text-brandGreen">.</span>
+        </h1>
+
+        <p class="text-white/60 text-base md:text-xl font-normal leading-relaxed max-w-xl text-balance mb-8">
+          We build production-grade web applications, secure API architectures, and disruptive digital products, seamlessly combined with award-winning post-production, print layouts, and brand systems.
+        </p>
+
+        <div class="flex flex-wrap gap-4 items-center w-full sm:w-auto">
+          <a 
+            href="#connect"
+            class="group flex items-center justify-center gap-4 bg-brandGreen hover:bg-white text-black font-bold text-xs tracking-widest uppercase px-8 py-5 rounded-full transition-all duration-300 w-full sm:w-auto shadow-lg"
+            @mouseenter="cursorText = 'GO'; cursorColorClass = 'bg-brandGreen border-transparent scale-150'"
+            @mouseleave="cursorText = ''; cursorColorClass = 'border-white scale-100'"
+          >
+            <span>Launch Your Project</span>
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-black/10 text-black group-hover:bg-black group-hover:text-brandGreen transition-colors">
+              <svg class="w-4 h-4 transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </span>
+          </a>
+          <button 
+            @click="isPlayingReel = true"
+            class="flex items-center justify-center border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold text-xs tracking-widest uppercase px-8 py-5 rounded-full transition-all w-full sm:w-auto gap-2"
+          >
+            <svg class="w-4 h-4 text-brandGreen" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+            Watch Showreel
+          </button>
+        </div>
+      </div>
+
+      <!-- Hero Right: Live Interactive Viewport -->
+      <div class="lg:col-span-5 relative w-full aspect-video lg:aspect-square bg-charcoal rounded-[2rem] border border-white/5 overflow-hidden group shadow-2xl">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 z-20 pointer-events-none"></div>
+        <div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,_rgba(0,0,0,0.25)_50%),_linear-gradient(90deg,_rgba(255,0,0,0.06),_rgba(0,255,0,0.02),_rgba(0,0,255,0.06))] bg-[size:100%_4px,_6px_100%] opacity-15 pointer-events-none z-20"></div>
+
+        <div class="absolute inset-0 z-10 flex flex-col justify-between p-6 pointer-events-none">
+          <div class="flex justify-between items-start">
+            <span class="text-[10px] bg-black/60 px-2.5 py-1.5 rounded-md font-mono tracking-widest text-brandGreen flex items-center gap-1.5 uppercase">
+              <span class="w-1.5 h-1.5 rounded-full bg-brandGreen animate-ping"></span> active link
+            </span>
+            <span class="text-[10px] bg-black/60 px-2.5 py-1.5 rounded-md font-mono tracking-widest text-white/50">
+              SH: 1/50
+            </span>
+          </div>
+
+          <div class="flex items-end justify-between">
+            <div class="flex gap-1 items-end h-8">
+              <span class="w-1 bg-brandGreen rounded-full animate-audio-bar h-4" style="animation-delay: 0.1s"></span>
+              <span class="w-1 bg-brandGreen rounded-full animate-audio-bar h-6" style="animation-delay: 0.2s"></span>
+              <span class="w-1 bg-brandGreen rounded-full animate-audio-bar h-3" style="animation-delay: 0.3s"></span>
+              <span class="w-1 bg-brandGreen rounded-full animate-audio-bar h-7" style="animation-delay: 0.4s"></span>
+              <span class="w-1 bg-brandGreen rounded-full animate-audio-bar h-5" style="animation-delay: 0.5s"></span>
+              <span class="w-1 bg-brandGreen rounded-full animate-audio-bar h-4" style="animation-delay: 0.6s"></span>
+            </div>
+            <div class="font-mono text-[10px] text-white/40 tracking-widest">
+              FPS: 60.00
+            </div>
+          </div>
+        </div>
+
+        <video 
+          id="heroRightVideo"
+          autoplay 
+          loop 
+          :muted="isMuted" 
+          playsinline
+          class="w-full h-full object-cover filter contrast-125 brightness-90 group-hover:scale-105 transition-transform duration-1000 ease-out z-0"
+          src="https://assets.mixkit.co/videos/preview/mixkit-cyberpunk-city-street-with-neon-lights-at-night-41760-large.mp4"
+        ></video>
+
+        <button 
+          @click="isMuted = !isMuted"
+          class="absolute bottom-6 right-6 z-30 bg-black/60 hover:bg-brandGreen hover:text-black text-white p-3 rounded-full transition-all border border-white/10"
+        >
+          <!-- Muted icon -->
+          <template x-if="isMuted">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6L4.5 9H1.5v6h3l4.5 3.75V5.25z" /></svg>
+          </template>
+          <!-- Unmuted icon -->
+          <template x-if="!isMuted">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+          </template>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- --- SELECTED WORKS (FILTERABLE BENTO GRID DESIGN) --- -->
+  <section id="work" class="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+    <div class="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-widest text-white/40 block mb-3">// CLIENT DELIVERABLES</span>
+        <h2 class="text-4xl md:text-5xl font-black tracking-tight uppercase">Case Engagements</h2>
+      </div>
+      
+      <!-- Filtering Tab System -->
+      <div class="flex flex-wrap gap-2 bg-[#161618] border border-white/5 p-1.5 rounded-full">
+        <button @click="filterType = 'all'" :class="filterType === 'all' ? 'bg-brandGreen text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'" class="px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all">All Projects</button>
+        <button @click="filterType = 'video'" :class="filterType === 'video' ? 'bg-brandGreen text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'" class="px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all">Post & Video</button>
+        <button @click="filterType = 'design'" :class="filterType === 'design' ? 'bg-brandGreen text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'" class="px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all">Brand & Full-Stack</button>
+      </div>
+    </div>
+
+    <!-- Asymmetrical Filtered Bento Layout -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Project 1 (North Face Video) -->
+      <div 
+        x-show="filterType === 'all' || filterType === 'video'"
+        x-transition
+        class="group relative rounded-3xl overflow-hidden bg-charcoal border border-white/5 p-6 md:p-8 flex flex-col justify-end cursor-pointer md:col-span-2 md:row-span-2 h-[450px] md:h-auto"
+        @click="isPlayingReel = true"
+        @mouseenter="cursorText = 'PLAY CUT'; cursorColorClass = 'bg-white border-transparent scale-150'"
+        @mouseleave="cursorText = ''; cursorColorClass = 'border-white scale-100'"
+      >
+        <div class="absolute inset-0 z-0">
+          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10 transition-opacity duration-500 group-hover:opacity-90"></div>
+          <video autoplay loop muted playsinline class="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out filter brightness-75 contrast-110" src="https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-41757-large.mp4"></video>
+        </div>
+        <div class="relative z-20">
+          <span class="text-[10px] font-bold tracking-widest text-brandGreen bg-black/60 border border-white/5 px-3 py-1.5 rounded-full inline-block mb-3 uppercase">Commercial Editorial</span>
+          <h3 class="text-xl md:text-2xl font-black tracking-tight uppercase group-hover:text-brandGreen transition-colors duration-300">North Face Campaign — 'Never Stop'</h3>
+          <div class="flex flex-wrap gap-2 mt-4 max-h-0 opacity-0 group-hover:max-h-[80px] group-hover:opacity-100 overflow-hidden transition-all duration-500 ease-out">
+            <span class="text-[9px] font-bold tracking-widest text-white/50 border border-white/10 px-2.5 py-1 rounded-md bg-white/5">Multi-cam Timeline Assembly</span>
+            <span class="text-[9px] font-bold tracking-widest text-white/50 border border-white/10 px-2.5 py-1 rounded-md bg-white/5">Acoustic Foley Design</span>
+          </div>
+        </div>
+        <div class="absolute top-6 right-6 z-20 w-10 h-10 rounded-full border border-white/10 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
+        </div>
+      </div>
+
+      <!-- Project 2 (Decibel Print Design) -->
+      <div 
+        x-show="filterType === 'all' || filterType === 'design'"
+        x-transition
+        class="group relative rounded-3xl overflow-hidden bg-charcoal border border-white/5 p-6 md:p-8 flex flex-col justify-end cursor-pointer h-[300px]"
+        @click="selectedImage = 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?auto=format&fit=crop&w=1200&q=80'"
+        @mouseenter="cursorText = 'EXPAND'; cursorColorClass = 'bg-brandGreen border-transparent scale-150'"
+        @mouseleave="cursorText = ''; cursorColorClass = 'border-white scale-100'"
+      >
+        <div class="absolute inset-0 z-0">
+          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10 transition-opacity duration-500 group-hover:opacity-90"></div>
+          <img class="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out filter brightness-90 group-hover:brightness-75 contrast-105" src="https://images.unsplash.com/photo-1557672172-298e090bd0f1?auto=format&fit=crop&w=1200&q=80" alt="Decibel poster">
+        </div>
+        <div class="relative z-20">
+          <span class="text-[10px] font-bold tracking-widest text-brandGreen bg-black/60 border border-white/5 px-3 py-1.5 rounded-full inline-block mb-3 uppercase">Event Visual Identity</span>
+          <h3 class="text-xl md:text-2xl font-black tracking-tight uppercase group-hover:text-brandGreen transition-colors duration-300">Decibel Music Festival — Brand Identity</h3>
+        </div>
+        <div class="absolute top-6 right-6 z-20 w-10 h-10 rounded-full border border-white/10 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" /></svg>
+        </div>
+      </div>
+
+      <!-- Project 3 (Linear Dashboard Application) -->
+      <div 
+        x-show="filterType === 'all' || filterType === 'design'"
+        x-transition
+        class="group relative rounded-3xl overflow-hidden bg-charcoal border border-white/5 p-6 md:p-8 flex flex-col justify-end cursor-pointer h-[300px]"
+        @click="selectedImage = 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80'"
+        @mouseenter="cursorText = 'PREVIEW'; cursorColorClass = 'bg-brandGreen border-transparent scale-150'"
+        @mouseleave="cursorText = ''; cursorColorClass = 'border-white scale-100'"
+      >
+        <div class="absolute inset-0 z-0">
+          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10 transition-opacity duration-500 group-hover:opacity-90"></div>
+          <img class="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out filter brightness-90 group-hover:brightness-75 contrast-105" src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80" alt="Linear platform">
+        </div>
+        <div class="relative z-20">
+          <span class="text-[10px] font-bold tracking-widest text-brandGreen bg-black/60 border border-white/5 px-3 py-1.5 rounded-full inline-block mb-3 uppercase">Full-Stack Platform</span>
+          <h3 class="text-xl md:text-2xl font-black tracking-tight uppercase group-hover:text-brandGreen transition-colors duration-300">Linear Workspace — Real-time Engine</h3>
+        </div>
+        <div class="absolute top-6 right-6 z-20 w-10 h-10 rounded-full border border-white/10 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" /></svg>
+        </div>
+      </div>
+
+      <!-- Project 4 (Sonder Apparel Poster) -->
+      <div 
+        x-show="filterType === 'all' || filterType === 'design'"
+        x-transition
+        class="group relative rounded-3xl overflow-hidden bg-charcoal border border-white/5 p-6 md:p-8 flex flex-col justify-end cursor-pointer md:row-span-2 h-[450px] md:h-auto"
+        @click="selectedImage = 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1200&q=80'"
+        @mouseenter="cursorText = 'EXPAND'; cursorColorClass = 'bg-brandGreen border-transparent scale-150'"
+        @mouseleave="cursorText = ''; cursorColorClass = 'border-white scale-100'"
+      >
+        <div class="absolute inset-0 z-0">
+          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10 transition-opacity duration-500 group-hover:opacity-90"></div>
+          <img class="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out filter brightness-90 group-hover:brightness-75 contrast-105" src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1200&q=80" alt="Sonder poster">
+        </div>
+        <div class="relative z-20">
+          <span class="text-[10px] font-bold tracking-widest text-brandGreen bg-black/60 border border-white/5 px-3 py-1.5 rounded-full inline-block mb-3 uppercase">Creative Print Poster</span>
+          <h3 class="text-xl md:text-2xl font-black tracking-tight uppercase group-hover:text-brandGreen transition-colors duration-300">Sonder Autumn Lookbook</h3>
+        </div>
+        <div class="absolute top-6 right-6 z-20 w-10 h-10 rounded-full border border-white/10 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" /></svg>
+        </div>
+      </div>
+
+      <!-- Project 5 (Vellum Poster) -->
+      <div 
+        x-show="filterType === 'all' || filterType === 'design'"
+        x-transition
+        class="group relative rounded-3xl overflow-hidden bg-charcoal border border-white/5 p-6 md:p-8 flex flex-col justify-end cursor-pointer h-[300px]"
+        @click="selectedImage = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80'"
+        @mouseenter="cursorText = 'EXPAND'; cursorColorClass = 'bg-brandGreen border-transparent scale-150'"
+        @mouseleave="cursorText = ''; cursorColorClass = 'border-white scale-100'"
+      >
+        <div class="absolute inset-0 z-0">
+          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10 transition-opacity duration-500 group-hover:opacity-90"></div>
+          <img class="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out filter brightness-90 group-hover:brightness-75 contrast-105" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80" alt="Vellum Poster">
+        </div>
+        <div class="relative z-20">
+          <span class="text-[10px] font-bold tracking-widest text-brandGreen bg-black/60 border border-white/5 px-3 py-1.5 rounded-full inline-block mb-3 uppercase">Creative Print Poster</span>
+          <h3 class="text-xl md:text-2xl font-black tracking-tight uppercase group-hover:text-brandGreen transition-colors duration-300">Vellum Fall Exhibition</h3>
+        </div>
+        <div class="absolute top-6 right-6 z-20 w-10 h-10 rounded-full border border-white/10 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" /></svg>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- --- THE SHOWREEL FOCUS (CINEMATIC FOCUS BOX) --- -->
+  <section class="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+    <div 
+      @click="isPlayingReel = true"
+      class="relative w-full aspect-video rounded-[2.5rem] bg-charcoal border border-white/5 overflow-hidden group cursor-pointer shadow-3xl"
+      @mouseenter="cursorText = 'PLAY REEL'; cursorColorClass = 'bg-brandGreen border-transparent scale-150'"
+      @mouseleave="cursorText = ''; cursorColorClass = 'border-white scale-100'"
+    >
+      <div class="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/10 to-black/30"></div>
+      
+      <div class="absolute inset-0 z-20 flex flex-col justify-between p-8 md:p-12 pointer-events-none">
+        <span class="text-[10px] font-bold tracking-widest text-brandGreen uppercase">// SHOWCASE & INTEGRATION</span>
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h3 class="text-3xl md:text-5xl font-black tracking-tight uppercase mb-4">GoodyApps Production Showreel</h3>
+            <p class="text-white/60 text-sm max-w-md font-normal leading-relaxed">
+              A condensed masterclass of direct editorial cuts, color calibrations, and detailed typographic mechanical layouts.
+            </p>
+          </div>
+
+          <div class="w-16 h-16 rounded-full bg-brandGreen text-black flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+            <svg class="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+          </div>
+        </div>
+      </div>
+
+      <video autoplay loop muted playsinline class="w-full h-full object-cover filter brightness-[0.6] group-hover:scale-105 transition-transform duration-1000 ease-out" src="https://assets.mixkit.co/videos/preview/mixkit-abstract-laser-lights-background-41765-large.mp4"></video>
+    </div>
+  </section>
+
+  <!-- --- INTERACTIVE BEFORE/AFTER COLOR GRADING SUITE --- -->
+  <section id="grading" class="py-24 bg-[#121214] border-y border-white/5 px-6 md:px-12 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+      
+      <!-- Left Text -->
+      <div class="lg:col-span-4 flex flex-col items-start">
+        <span class="text-xs font-bold uppercase tracking-widest text-brandGreen block mb-3">// SPECTRAL CALIBRATION</span>
+        <h2 class="text-4xl md:text-5xl font-black tracking-tight uppercase mb-6">Commercial Grading</h2>
+        <p class="text-white/60 font-normal text-sm md:text-base leading-relaxed mb-6">
+          Color dictates narrative focus. Drag the interface slider to evaluate our raw LOG camera format conversions into finalized, color-calibrated Rec. 709 master files.
+        </p>
+        <div class="flex gap-4 items-center">
+          <span class="text-[10px] bg-white/5 border border-white/10 text-white/40 px-3 py-1.5 rounded-md uppercase font-bold tracking-widest">3D LUT Calibration</span>
+          <span class="text-[10px] bg-white/5 border border-white/10 text-white/40 px-3 py-1.5 rounded-md uppercase font-bold tracking-widest">Rec. 709 Broadcast</span>
+        </div>
+      </div>
+
+      <!-- Right Interactive Dual Grading Canvas -->
+      <div class="lg:col-span-8 flex justify-center">
+        <div 
+          ref="sliderRef"
+          x-ref="sliderContainer"
+          @mousemove="
+            let rect = $refs.sliderContainer.getBoundingClientRect();
+            let x = $event.clientX - rect.left;
+            gradingProgress = Math.max(0, Math.min(100, (x / rect.width) * 100));
+          "
+          @touchmove="
+            let rect = $refs.sliderContainer.getBoundingClientRect();
+            let x = $event.touches[0].clientX - rect.left;
+            gradingProgress = Math.max(0, Math.min(100, (x / rect.width) * 100));
+          "
+          class="relative w-full aspect-video rounded-3xl overflow-hidden border border-white/5 select-none cursor-ew-resize group shadow-2xl"
+          @mouseenter="cursorText = 'DRAG'; cursorColorClass = 'bg-white border-transparent scale-125'"
+          @mouseleave="cursorText = ''; cursorColorClass = 'border-white scale-100'"
+        >
+          <!-- Graded Layer -->
+          <div class="absolute inset-0 pointer-events-none">
+            <video autoplay loop muted playsinline class="w-full h-full object-cover filter contrast-125 brightness-110 saturate-125" src="https://assets.mixkit.co/videos/preview/mixkit-tunnel-of-futuristic-blue-lights-41753-large.mp4"></video>
+            <span class="absolute bottom-6 right-6 z-20 bg-brandGreen text-black text-[10px] font-bold tracking-widest px-3 py-1.5 rounded-md uppercase">Graded Deliverable</span>
+          </div>
+
+          <!-- LOG Profile Layer -->
+          <div 
+            class="absolute inset-y-0 left-0 pointer-events-none overflow-hidden border-r border-white/50"
+            :style="`width: ${gradingProgress}%`"
+          >
+            <div class="absolute inset-y-0 left-0 w-[100vw] h-full" :style="`width: ${$refs.sliderContainer ? $refs.sliderContainer.clientWidth : '100%'}px`">
+              <video autoplay loop muted playsinline class="h-full object-cover filter grayscale contrast-50 brightness-110 sepia-[20%]" src="https://assets.mixkit.co/videos/preview/mixkit-tunnel-of-futuristic-blue-lights-41753-large.mp4" style="width: 100%"></video>
+            </div>
+            <span class="absolute bottom-6 left-6 z-20 bg-black/60 text-white text-[10px] font-bold tracking-widest px-3 py-1.5 rounded-md uppercase">Raw LOG Format</span>
+          </div>
+
+          <!-- Sliding Bar Divider -->
+          <div class="absolute inset-y-0 z-30 pointer-events-none" :style="`left: ${gradingProgress}%`">
+            <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white text-black flex items-center justify-center shadow-lg border-2 border-white text-xs font-bold">
+              ↔
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- --- CAPABILITIES SECTION (INTERACTIVE ACCORDION ROWS) --- -->
+  <section id="capabilities" class="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+      
+      <div class="lg:col-span-5">
+        <span class="text-xs font-bold uppercase tracking-widest text-white/40 block mb-3">// STUDIO CAPABILITIES</span>
+        <h2 class="text-4xl md:text-6xl font-black tracking-tight uppercase mb-6">Designed for Operational Performance</h2>
+        <p class="text-white/60 font-normal text-sm md:text-base leading-relaxed mb-8">
+          We coordinate post-production, print mechanical systems, and full-stack software development with absolute rigor. Here is our structured studio offering.
+        </p>
+        
+        <!-- Video Previews synchronized with Accordion states -->
+        <div class="hidden lg:block relative w-full aspect-video rounded-3xl overflow-hidden border border-white/5 bg-charcoal">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10"></div>
+          
+          <video x-show="activeCapability === 0" autoplay loop muted playsinline class="w-full h-full object-cover" src="https://assets.mixkit.co/videos/preview/mixkit-abstract-laser-lights-background-41765-large.mp4"></video>
+          <video x-show="activeCapability === 1" autoplay loop muted playsinline class="w-full h-full object-cover" src="https://assets.mixkit.co/videos/preview/mixkit-tunnel-of-futuristic-blue-lights-41753-large.mp4" style="display: none;"></video>
+          <video x-show="activeCapability === 2" autoplay loop muted playsinline class="w-full h-full object-cover" src="https://assets.mixkit.co/videos/preview/mixkit-cyberpunk-city-street-with-neon-lights-at-night-41760-large.mp4" style="display: none;"></video>
+        </div>
+      </div>
+
+      <!-- Accordion Grid list -->
+      <div class="lg:col-span-7 divide-y divide-white/10 border-y border-white/10">
+        
+        <!-- Cap Item 1 -->
+        <div @click="activeCapability = 0" class="py-8 cursor-pointer group transition-colors">
+          <div class="flex justify-between items-center gap-4">
+            <h3 :class="activeCapability === 0 ? 'text-brandGreen' : 'text-white/60 group-hover:text-white'" class="text-xl md:text-2xl font-black uppercase transition-colors">
+              01 / Full-Stack Application Development
+            </h3>
+            <span class="text-sm font-bold tracking-widest text-white/30" x-text="activeCapability === 0 ? '[-]' : '[+]'"></span>
+          </div>
+          <div x-show="activeCapability === 0" x-collapse class="mt-4 text-white/60 text-sm md:text-base font-normal leading-relaxed max-w-xl">
+            Production-ready web architectures built with React, Next.js, and Node.js. We implement robust serverless layers, secure databases, optimized API setups, and fast, fully responsive client interfaces.
+            <div class="flex flex-wrap gap-2 mt-4">
+              <span class="text-[10px] font-bold tracking-widest text-white/40 border border-white/5 px-3 py-1.5 rounded-full bg-charcoal">Database optimization & modeling</span>
+              <span class="text-[10px] font-bold tracking-widest text-white/40 border border-white/5 px-3 py-1.5 rounded-full bg-charcoal">Real-time dynamic dashboard architectures</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cap Item 2 -->
+        <div @click="activeCapability = 1" class="py-8 cursor-pointer group transition-colors">
+          <div class="flex justify-between items-center gap-4">
+            <h3 :class="activeCapability === 1 ? 'text-brandGreen' : 'text-white/60 group-hover:text-white'" class="text-xl md:text-2xl font-black uppercase transition-colors">
+              02 / High-Performance Post-Production
+            </h3>
+            <span class="text-sm font-bold tracking-widest text-white/30" x-text="activeCapability === 1 ? '[-]' : '[+]'"></span>
+          </div>
+          <div x-show="activeCapability === 1" x-collapse style="display: none;" class="mt-4 text-white/60 text-sm md:text-base font-normal leading-relaxed max-w-xl">
+            Frame-accurate commercial editing constructed specifically for high retention, narrative clarity, and optimized delivery across global streaming platforms and corporate marketing networks.
+            <div class="flex flex-wrap gap-2 mt-4">
+              <span class="text-[10px] font-bold tracking-widest text-white/40 border border-white/5 px-3 py-1.5 rounded-full bg-charcoal">Sub-frame timeline organization</span>
+              <span class="text-[10px] font-bold tracking-widest text-white/40 border border-white/5 px-3 py-1.5 rounded-full bg-charcoal">Professional foley, mixing, and sound design</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cap Item 3 -->
+        <div @click="activeCapability = 2" class="py-8 cursor-pointer group transition-colors">
+          <div class="flex justify-between items-center gap-4">
+            <h3 :class="activeCapability === 2 ? 'text-brandGreen' : 'text-white/60 group-hover:text-white'" class="text-xl md:text-2xl font-black uppercase transition-colors">
+              03 / Systemic Brand Identity & Print Design
+            </h3>
+            <span class="text-sm font-bold tracking-widest text-white/30" x-text="activeCapability === 2 ? '[-]' : '[+]'"></span>
+          </div>
+          <div x-show="activeCapability === 2" x-collapse style="display: none;" class="mt-4 text-white/60 text-sm md:text-base font-normal leading-relaxed max-w-xl">
+            Brutalist posters, editorial brand systems, print layouts, corporate design guidelines, and cohesive collateral engineered for digital scalability and print execution.
+            <div class="flex flex-wrap gap-2 mt-4">
+              <span class="text-[10px] font-bold tracking-widest text-white/40 border border-white/5 px-3 py-1.5 rounded-full bg-charcoal">Grid-aligned typography architecture</span>
+              <span class="text-[10px] font-bold tracking-widest text-white/40 border border-white/5 px-3 py-1.5 rounded-full bg-charcoal">High-DPI, print-ready mechanical assembly</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- --- TOOLKIT STACK MARQUEE --- -->
+  <section class="py-20 bg-[#121214] border-y border-white/5 overflow-hidden relative">
+    <div class="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#121214] to-transparent z-10 pointer-events-none"></div>
+    <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#121214] to-transparent z-10 pointer-events-none"></div>
+    
+    <div class="max-w-7xl mx-auto px-6 md:px-12 mb-10">
+      <span class="text-[10px] font-bold tracking-widest text-brandGreen uppercase">// SOFTWARE, COMPLIANCE & FULL-STACK ENGINES</span>
+    </div>
+
+    <div class="flex w-full overflow-hidden">
+      <div class="flex gap-6 animate-marquee whitespace-nowrap">
+        <!-- Loop tools -->
+        <div class="inline-flex items-center gap-4 bg-charcoal border border-white/5 px-8 py-5 rounded-2xl shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center border border-white/10 text-xs font-extrabold text-brandGreen">JS</div>
+          <div><div class="text-xs font-bold uppercase text-white tracking-widest">React / Next.js</div><div class="text-[9px] font-medium text-white/40 uppercase tracking-widest mt-0.5">Frontend Architecture</div></div>
+        </div>
+        <div class="inline-flex items-center gap-4 bg-charcoal border border-white/5 px-8 py-5 rounded-2xl shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center border border-white/10 text-xs font-extrabold text-[#D299FF]">Pr</div>
+          <div><div class="text-xs font-bold uppercase text-white tracking-widest">Premiere Pro</div><div class="text-[9px] font-medium text-white/40 uppercase tracking-widest mt-0.5">NLE Production Suite</div></div>
+        </div>
+        <div class="inline-flex items-center gap-4 bg-charcoal border border-white/5 px-8 py-5 rounded-2xl shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center border border-white/10 text-xs font-extrabold text-[#9999FF]">Node</div>
+          <div><div class="text-xs font-bold uppercase text-white tracking-widest">Node.js / Express</div><div class="text-[9px] font-medium text-white/40 uppercase tracking-widest mt-0.5">Backend Execution</div></div>
+        </div>
+        <div class="inline-flex items-center gap-4 bg-charcoal border border-white/5 px-8 py-5 rounded-2xl shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center border border-white/10 text-orange-400"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none" /><circle cx="12" cy="12" r="2.5" /></svg></div>
+          <div><div class="text-xs font-bold uppercase text-white tracking-widest">DaVinci</div><div class="text-[9px] font-medium text-white/40 uppercase tracking-widest mt-0.5">Industry Color Grading</div></div>
+        </div>
+        <div class="inline-flex items-center gap-4 bg-charcoal border border-white/5 px-8 py-5 rounded-2xl shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center border border-white/10 text-xs font-extrabold text-[#31A8FF]">Ps</div>
+          <div><div class="text-xs font-bold uppercase text-white tracking-widest">Photoshop</div><div class="text-[9px] font-medium text-white/40 uppercase tracking-widest mt-0.5">Creative Asset Compositing</div></div>
+        </div>
+        <!-- Duplicate loop for endless scroll seamless loop -->
+        <div class="inline-flex items-center gap-4 bg-charcoal border border-white/5 px-8 py-5 rounded-2xl shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center border border-white/10 text-xs font-extrabold text-brandGreen">JS</div>
+          <div><div class="text-xs font-bold uppercase text-white tracking-widest">React / Next.js</div><div class="text-[9px] font-medium text-white/40 uppercase tracking-widest mt-0.5">Frontend Architecture</div></div>
+        </div>
+        <div class="inline-flex items-center gap-4 bg-charcoal border border-white/5 px-8 py-5 rounded-2xl shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center border border-white/10 text-xs font-extrabold text-[#D299FF]">Pr</div>
+          <div><div class="text-xs font-bold uppercase text-white tracking-widest">Premiere Pro</div><div class="text-[9px] font-medium text-white/40 uppercase tracking-widest mt-0.5">NLE Production Suite</div></div>
+        </div>
+        <div class="inline-flex items-center gap-4 bg-charcoal border border-white/5 px-8 py-5 rounded-2xl shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center border border-white/10 text-xs font-extrabold text-[#9999FF]">Node</div>
+          <div><div class="text-xs font-bold uppercase text-white tracking-widest">Node.js / Express</div><div class="text-[9px] font-medium text-white/40 uppercase tracking-widest mt-0.5">Backend Execution</div></div>
+        </div>
+        <div class="inline-flex items-center gap-4 bg-charcoal border border-white/5 px-8 py-5 rounded-2xl shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center border border-white/10 text-orange-400"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none" /><circle cx="12" cy="12" r="2.5" /></svg></div>
+          <div><div class="text-xs font-bold uppercase text-white tracking-widest">DaVinci</div><div class="text-[9px] font-medium text-white/40 uppercase tracking-widest mt-0.5">Industry Color Grading</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- --- PARTNERSHIPS / TRUST --- -->
+  <section class="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+    <div class="text-center mb-16 max-w-2xl mx-auto">
+      <span class="text-xs font-bold uppercase tracking-widest text-brandGreen block mb-3">// VERIFIED INDUSTRY CASE REVIEWS</span>
+      <h2 class="text-4xl md:text-5xl font-black tracking-tight uppercase">Strategic Partnerships</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      
+      <div class="bg-charcoal border border-white/5 rounded-3xl p-8 flex flex-col justify-between">
+        <p class="text-white/75 text-sm md:text-base leading-relaxed font-normal italic">
+          "GoodyApps delivered a pristine real-time workspace application alongside an incredible promo product video. Their dual mastery of high-performance code and post-production editing completely elevated our platform launch."
+        </p>
+        <div class="flex items-center gap-4 mt-8 border-t border-white/5 pt-6">
+          <div class="w-10 h-10 rounded-full bg-brandGreen flex items-center justify-center text-black font-extrabold text-xs">M</div>
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-widest text-white">Marcus Vance</h4>
+            <p class="text-[10px] text-white/40 tracking-widest uppercase font-bold">VP of Digital, Apex Media</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-charcoal border border-white/5 rounded-3xl p-8 flex flex-col justify-between">
+        <p class="text-white/75 text-sm md:text-base leading-relaxed font-normal italic">
+          "We secured a fully responsive SaaS portal and direct layout guidelines from GoodyApps. Excellent communication standards, absolute sub-frame code precision, and timely delivery throughout."
+        </p>
+        <div class="flex items-center gap-4 mt-8 border-t border-white/5 pt-6">
+          <div class="w-10 h-10 rounded-full bg-brandGreen flex items-center justify-center text-black font-extrabold text-xs">S</div>
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-widest text-white">Sonia Croft</h4>
+            <p class="text-[10px] text-white/40 tracking-widest uppercase font-bold">Director of Product, Ethereal Co.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-charcoal border border-white/5 rounded-3xl p-8 flex flex-col justify-between">
+        <p class="text-white/75 text-sm md:text-base leading-relaxed font-normal italic">
+          "Immaculate full-stack execution and color space tuning. Their development framework integrated seamlessly with our existing databases, ensuring optimal speeds and top-tier security standards."
+        </p>
+        <div class="flex items-center gap-4 mt-8 border-t border-white/5 pt-6">
+          <div class="w-10 h-10 rounded-full bg-brandGreen flex items-center justify-center text-black font-extrabold text-xs">D</div>
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-widest text-white">Daniel Kross</h4>
+            <p class="text-[10px] text-white/40 tracking-widest uppercase font-bold">CTO, Maven Group</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- --- FAQ SECTION --- -->
+  <section id="faq" class="py-24 px-6 md:px-12 max-w-4xl mx-auto border-t border-white/5">
+    <div class="text-center mb-16">
+      <span class="text-xs font-bold uppercase tracking-widest text-brandGreen block mb-3">// PROJECT FREQUENCIES</span>
+      <h2 class="text-4xl md:text-5xl font-black tracking-tight uppercase">Operational FAQ</h2>
+    </div>
+
+    <div class="divide-y divide-white/10 border-y border-white/10">
+      
+      <!-- FAQ Item 1 -->
+      <div @click="activeFaq = activeFaq === 1 ? null : 1" class="py-6 cursor-pointer group">
+        <div class="flex justify-between items-center gap-6">
+          <h4 :class="activeFaq === 1 ? 'text-brandGreen' : 'text-white/85 group-hover:text-white'" class="text-base md:text-lg font-bold uppercase tracking-tight transition-colors duration-300">
+            What technical stacks do you support for Full-Stack development?
+          </h4>
+          <span :class="activeFaq === 1 ? 'rotate-180 text-brandGreen' : 'text-white/30 group-hover:text-white'" class="transition-transform duration-300 transform text-sm font-bold shrink-0">
+            ↓
+          </span>
+        </div>
+        <div x-show="activeFaq === 1" x-collapse style="display: none;" class="mt-4 text-white/60 text-sm md:text-base leading-relaxed font-normal">
+          We primarily engineer applications using React, Next.js, Node.js, and TypeScript. For data-rich platforms, we implement PostgreSQL, Prisma, Tailwind CSS, and headless API setups, all configured for lightning-fast sub-second loading states.
+        </div>
+      </div>
+
+      <!-- FAQ Item 2 -->
+      <div @click="activeFaq = activeFaq === 2 ? null : 2" class="py-6 cursor-pointer group">
+        <div class="flex justify-between items-center gap-6">
+          <h4 :class="activeFaq === 2 ? 'text-brandGreen' : 'text-white/85 group-hover:text-white'" class="text-base md:text-lg font-bold uppercase tracking-tight transition-colors duration-300">
+            How does your studio integrate with our internal creative and marketing teams?
+          </h4>
+          <span :class="activeFaq === 2 ? 'rotate-180 text-brandGreen' : 'text-white/30 group-hover:text-white'" class="transition-transform duration-300 transform text-sm font-bold shrink-0">
+            ↓
+          </span>
+        </div>
+        <div x-show="activeFaq === 2" x-collapse style="display: none;" class="mt-4 text-white/60 text-sm md:text-base leading-relaxed font-normal">
+          We integrate directly via shared GitHub architectures, Figma files, Frame.io pipelines, Slack, and professional asset handoff workflows. Every milestone is cataloged with absolute transparency.
+        </div>
+      </div>
+
+      <!-- FAQ Item 3 -->
+      <div @click="activeFaq = activeFaq === 3 ? null : 3" class="py-6 cursor-pointer group">
+        <div class="flex justify-between items-center gap-6">
+          <h4 :class="activeFaq === 3 ? 'text-brandGreen' : 'text-white/85 group-hover:text-white'" class="text-base md:text-lg font-bold uppercase tracking-tight transition-colors duration-300">
+            Do you deliver complete source code and layout packages?
+          </h4>
+          <span :class="activeFaq === 3 ? 'rotate-180 text-brandGreen' : 'text-white/30 group-hover:text-white'" class="transition-transform duration-300 transform text-sm font-bold shrink-0">
+            ↓
+          </span>
+        </div>
+        <div x-show="activeFaq === 3" x-collapse style="display: none;" class="mt-4 text-white/60 text-sm md:text-base leading-relaxed font-normal">
+          Yes. All structural enterprise agreements include complete repository handoffs—including fully organized Premiere Pro/DaVinci Resolve project archives, native vector assets, structured React/Next.js codebase templates, and full commercial usage rights.
+        </div>
+      </div>
+
+      <!-- FAQ Item 4 -->
+      <div @click="activeFaq = activeFaq === 4 ? null : 4" class="py-6 cursor-pointer group">
+        <div class="flex justify-between items-center gap-6">
+          <h4 :class="activeFaq === 4 ? 'text-brandGreen' : 'text-white/85 group-hover:text-white'" class="text-base md:text-lg font-bold uppercase tracking-tight transition-colors duration-300">
+            What technical broadcast standards and security protocols do you support?
+          </h4>
+          <span :class="activeFaq === 4 ? 'rotate-180 text-brandGreen' : 'text-white/30 group-hover:text-white'" class="transition-transform duration-300 transform text-sm font-bold shrink-0">
+            ↓
+          </span>
+        </div>
+        <div x-show="activeFaq === 4" x-collapse style="display: none;" class="mt-4 text-white/60 text-sm md:text-base leading-relaxed font-normal">
+          We deliver fully encrypted HTTPS deployments, secure OAuth authentication configurations, and DCI-P3 calibrated color conversions for commercial broadcasting feeds, ensuring absolute compliance with current industry guidelines.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- --- CONNECT & DYNAMIC FORM SECTION --- -->
+  <section id="connect" class="py-32 px-6 md:px-12 relative overflow-hidden bg-[#0e0e10]">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-brandGreen/5 filter blur-[150px] rounded-full pointer-events-none"></div>
+
+    <div class="max-w-4xl mx-auto relative z-10">
+      <div class="text-center mb-12">
+        <span class="text-xs font-bold uppercase tracking-widest text-brandGreen block mb-4">ESTABLISHING PARTNERSHIPS</span>
+        <h2 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight uppercase leading-[0.95] mb-4">
+          Initiate Your Project<span class="text-brandGreen">.</span>
+        </h2>
+        <p class="text-white/60 text-sm max-w-lg mx-auto">
+          Fill out the dynamic form below, or reach out directly at <a href="mailto:support@goodyapps.com" class="text-brandGreen hover:underline">support@goodyapps.com</a>.
+        </p>
+      </div>
+
+      <!-- DYNAMIC CONTACT FORM CONTAINER -->
+      <div class="bg-charcoal/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-12 text-left max-w-2xl mx-auto">
+        
+        <!-- Form Idle State -->
+        <form x-show="formStatus === 'idle' || formStatus === 'submitting'" @submit.prevent="handleFormSubmit()" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-white/50 mb-2">Your Name</label>
+              <input 
+                type="text" 
+                required 
+                x-model="formFields.name"
+                class="w-full bg-charcoal border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brandGreen transition-colors"
+                placeholder="Marcus Vance"
+              >
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-white/50 mb-2">Company Email</label>
+              <input 
+                type="email" 
+                required 
+                x-model="formFields.email"
+                class="w-full bg-charcoal border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brandGreen transition-colors"
+                placeholder="marcus@agency.com"
+              >
+            </div>
+          </div>
+
+          <!-- CUSTOM DYNAMIC SELECT DROPDOWN COMPONENT -->
+          <div x-data="{ isOpen: false }" class="relative">
+            <label class="block text-xs font-bold uppercase tracking-wider text-white/50 mb-2">Project Classification</label>
+            
+            <!-- Dropdown Trigger Button -->
+            <button 
+              type="button"
+              @click="isOpen = !isOpen"
+              @click.outside="isOpen = false"
+              class="w-full bg-charcoal border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brandGreen transition-all flex items-center justify-between text-left cursor-pointer"
+              :class="isOpen ? 'border-brandGreen ring-1 ring-brandGreen/30' : ''"
+            >
+              <span x-text="
+                formFields.service === 'Full-Stack Development' ? 'Full-Stack Web & Mobile Development' :
+                formFields.service === 'Commercial Post-Production' ? 'Commercial Post-Production & Video Editing' :
+                formFields.service === 'Systemic Brand Identity' ? 'Systemic Brand Identity & Print Design' :
+                formFields.service === 'Complete Digital Ecosystem' ? 'Complete Integrated Ecosystem (All Services)' : 'Select Service Classification...'
+              "></span>
+              <svg 
+                class="w-4 h-4 text-white/50 transition-transform duration-300"
+                :class="isOpen ? 'rotate-180 text-brandGreen' : ''"
+                fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+
+            <!-- Dropdown Menu Options List -->
+            <div 
+              x-show="isOpen"
+              x-transition:enter="transition ease-out duration-150"
+              x-transition:enter-start="opacity-0 scale-95"
+              x-transition:enter-end="opacity-100 scale-100"
+              x-transition:leave="transition ease-in duration-100"
+              x-transition:leave-start="opacity-100 scale-100"
+              x-transition:leave-end="opacity-0 scale-95"
+              style="display: none;"
+              class="absolute z-30 w-full mt-2 bg-[#121214] border border-white/10 rounded-xl shadow-2xl overflow-hidden divide-y divide-white/5 backdrop-blur-xl"
+            >
+              <!-- Option 1 -->
+              <div 
+                @click="formFields.service = 'Full-Stack Development'; isOpen = false"
+                class="px-4 py-3.5 text-sm text-white/80 hover:text-white hover:bg-white/5 cursor-pointer flex items-center justify-between transition-colors duration-150"
+                :class="formFields.service === 'Full-Stack Development' ? 'bg-white/[0.02] text-brandGreen font-bold' : ''"
+              >
+                <span>Full-Stack Web & Mobile Development</span>
+                <svg x-show="formFields.service === 'Full-Stack Development'" class="w-4 h-4 text-brandGreen" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              
+              <!-- Option 2 -->
+              <div 
+                @click="formFields.service = 'Commercial Post-Production'; isOpen = false"
+                class="px-4 py-3.5 text-sm text-white/80 hover:text-white hover:bg-white/5 cursor-pointer flex items-center justify-between transition-colors duration-150"
+                :class="formFields.service === 'Commercial Post-Production' ? 'bg-white/[0.02] text-brandGreen font-bold' : ''"
+              >
+                <span>Commercial Post-Production & Video Editing</span>
+                <svg x-show="formFields.service === 'Commercial Post-Production'" class="w-4 h-4 text-brandGreen" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+
+              <!-- Option 3 -->
+              <div 
+                @click="formFields.service = 'Systemic Brand Identity'; isOpen = false"
+                class="px-4 py-3.5 text-sm text-white/80 hover:text-white hover:bg-white/5 cursor-pointer flex items-center justify-between transition-colors duration-150"
+                :class="formFields.service === 'Systemic Brand Identity' ? 'bg-white/[0.02] text-brandGreen font-bold' : ''"
+              >
+                <span>Systemic Brand Identity & Print Design</span>
+                <svg x-show="formFields.service === 'Systemic Brand Identity'" class="w-4 h-4 text-brandGreen" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+
+              <!-- Option 4 -->
+              <div 
+                @click="formFields.service = 'Complete Digital Ecosystem'; isOpen = false"
+                class="px-4 py-3.5 text-sm text-white/80 hover:text-white hover:bg-white/5 cursor-pointer flex items-center justify-between transition-colors duration-150"
+                :class="formFields.service === 'Complete Digital Ecosystem' ? 'bg-white/[0.02] text-brandGreen font-bold' : ''"
+              >
+                <span>Complete Integrated Ecosystem (All Services)</span>
+                <svg x-show="formFields.service === 'Complete Digital Ecosystem'" class="w-4 h-4 text-brandGreen" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Hidden Input for Form Fallbacks -->
+            <input type="hidden" name="service" :value="formFields.service">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-white/50 mb-2">Project Brief & Deliverables</label>
+            <textarea 
+              required 
+              rows="4"
+              x-model="formFields.message"
+              class="w-full bg-charcoal border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brandGreen transition-colors resize-none"
+              placeholder="Outline your scope, budget, timeline parameters, and required deliverables here..."
+            ></textarea>
+          </div>
+
+          <div class="flex items-center justify-between pt-4">
+            <button 
+              type="button"
+              @click="copyEmail()"
+              class="text-xs font-bold uppercase tracking-widest text-white/50 hover:text-brandGreen transition-colors flex items-center gap-2"
+            >
+              <span>support@goodyapps.com</span>
+              <span class="text-[10px] opacity-60">📋</span>
+            </button>
+            
+            <button 
+              type="submit"
+              :disabled="formStatus === 'submitting'"
+              class="bg-brandGreen text-black font-bold text-xs tracking-widest uppercase px-8 py-4 rounded-full transition-all active:scale-95 hover:bg-white flex items-center gap-2 disabled:opacity-50"
+            >
+              <span x-text="formStatus === 'submitting' ? 'Submitting...' : 'Send Message'"></span>
+              <svg x-show="formStatus !== 'submitting'" class="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </button>
+          </div>
+        </form>
+
+        <!-- Form Success State -->
+        <div 
+          x-show="formStatus === 'success'" 
+          style="display: none;" 
+          class="text-center py-12 space-y-6"
+        >
+          <div class="w-16 h-16 bg-brandGreen/10 border border-brandGreen/20 rounded-full flex items-center justify-center mx-auto text-brandGreen">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+          </div>
+          <h3 class="text-2xl font-black uppercase tracking-tight text-white">Transmission Successful</h3>
+          <p class="text-white/60 text-sm leading-relaxed max-w-sm mx-auto">
+            Your project brief has been logged directly into the queue. A senior partner will contact you at your company email address within the next 4 business hours.
+          </p>
+          <button 
+            @click="formStatus = 'idle'"
+            class="mt-4 border border-white/10 hover:border-white/20 px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-white/50 hover:text-white transition-all"
+          >
+            Submit Another Inquiry
+          </button>
+        </div>
+
+        <!-- Form Error State -->
+        <div 
+          x-show="formStatus === 'error'" 
+          style="display: none;" 
+          class="text-center py-12 space-y-6"
+        >
+          <div class="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto text-red-500">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          </div>
+          <h3 class="text-2xl font-black uppercase tracking-tight text-white">Transmission Interrupted</h3>
+          <p class="text-white/60 text-sm leading-relaxed max-w-sm mx-auto">
+            Our API endpoints are undergoing maintenance. Please launch your project by sending the brief directly to <span class="text-brandGreen underline">support@goodyapps.com</span>.
+          </p>
+          <button 
+            @click="formStatus = 'idle'"
+            class="mt-4 border border-white/10 hover:border-white/20 px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-white/50 hover:text-white transition-all"
+          >
+            Retry Submission
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- --- FOOTER --- -->
+  <footer class="border-t border-white/5 py-12 px-6 md:px-12 bg-black/40">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-xs text-white/40 font-bold uppercase tracking-widest">
+      <div class="font-black tracking-tight text-white text-sm">
+        GOODYAPPS<span class="text-brandGreen">.</span>
+      </div>
+      <div class="flex flex-wrap gap-8 justify-center">
+        <a href="#" class="hover:text-brandGreen transition-colors">X / Twitter</a>
+        <a href="#" class="hover:text-brandGreen transition-colors">Behance</a>
+        <a href="#" class="hover:text-brandGreen transition-colors">YouTube</a>
+        <a href="#" class="hover:text-brandGreen transition-colors">LinkedIn</a>
+      </div>
+      <div>© 2026 GoodyApps Group. All Rights Reserved.</div>
+    </div>
+  </footer>
+
+  <!-- --- LIGHTBOX DETAIL MODAL --- -->
+  <div 
+    x-show="selectedImage"
+    x-transition
+    style="display: none;"
+    class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 md:p-12 backdrop-blur-xl"
+  >
+    <div class="absolute inset-0 cursor-zoom-out" @click="selectedImage = null"></div>
+    <button 
+      @click="selectedImage = null"
+      class="absolute top-6 right-6 z-50 text-white/60 hover:text-white text-xs tracking-widest font-black uppercase transition-colors bg-white/5 border border-white/10 px-4 py-2.5 rounded-full"
+    >
+      [ Close Details × ]
+    </button>
+    <div class="relative max-w-4xl max-h-[85vh] rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl z-10 pointer-events-auto">
+      <img class="w-full h-full max-h-[85vh] object-contain" :src="selectedImage" alt="Detail Layout">
+    </div>
+  </div>
+
+  <!-- --- REEL VIDEO MODAL --- -->
+  <div 
+    x-show="isPlayingReel"
+    x-transition
+    style="display: none;"
+    class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 md:p-12 backdrop-blur-xl"
+  >
+    <div class="absolute inset-0" @click="isPlayingReel = false"></div>
+    <button 
+      @click="isPlayingReel = false"
+      class="absolute top-6 right-6 z-50 text-white/60 hover:text-white text-xs tracking-widest font-black uppercase transition-colors bg-white/5 border border-white/10 px-4 py-2.5 rounded-full"
+    >
+      [ Close × ]
+    </button>
+    <div class="w-full max-w-6xl aspect-video rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl z-10">
+      <iframe 
+        class="w-full h-full object-cover" 
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+        title="Cinematic Reel Player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      ></iframe>
+    </div>
+  </div>
+
+</body>
+</html>
